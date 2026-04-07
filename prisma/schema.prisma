@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          Role      @default(USER)
+  locale        String    @default("en")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  reviews       Review[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Destination {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  images      String[]
+  price       Int
+  featured    Boolean  @default(false)
+  duration    Int      // days
+  maxGuests   Int      @default(6)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  translations DestinationTranslation[]
+  activities   Activity[]
+  orders       Order[]
+  reviews      Review[]
+}
+
+model DestinationTranslation {
+  id             String      @id @default(cuid())
+  destinationId  String
+  locale         String
+  title          String
+  shortDesc      String      @db.Text
+  description    String      @db.Text
+  highlights     String[]
+  included       String[]
+  notIncluded    String[]
+  
+  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  
+  @@unique([destinationId, locale])
+}
+
+model Activity {
+  id             String   @id @default(cuid())
+  destinationId  String
+  slug           String
+  name           String
+  description    String   @db.Text
+  price          Int      // additional price
+  icon           String   // lucide icon name
+  image          String?
+  createdAt      DateTime @default(now())
+  
+  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  orderItems     OrderItem[]
+  
+  translations   ActivityTranslation[]
+}
+
+model ActivityTranslation {
+  id           String   @id @default(cuid())
+  activityId   String
+  locale       String
+  name         String
+  description  String   @db.Text
+  
+  activity     Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  
+  @@unique([activityId, locale])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String?
+  destinationId   String
+  date            DateTime
+  guests          Int
+  totalAmount     Int         // cents
+  status          OrderStatus @default(PENDING)
+  notes           String?     @db.Text
+  stripePaymentId String?    @unique
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  user            User?       @relation(fields: [userId], references: [id])
+  destination     Destination @relation(fields: [destinationId], references: [id])
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  activityId  String?
+  activityName String
+  price       Int      // cents
+  
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  activity    Activity? @relation(fields: [activityId], references: [id])
+}
+
+model Review {
+  id             String   @id @default(cuid())
+  userId         String
+  destinationId  String
+  rating         Int      // 1-5
+  comment        String   @db.Text
+  authorName     String
+  authorImage    String?
+  createdAt      DateTime @default(now())
+  
+  user           User       @relation(fields: [userId], references: [id])
+  destination    Destination @relation(fields: [destinationId], references: [id])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  image       String
+  category    String
+  readTime    Int      // minutes
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  translations BlogPostTranslation[]
+}
+
+model BlogPostTranslation {
+  id          String    @id @default(cuid())
+  blogPostId  String
+  locale      String
+  title       String
+  excerpt     String    @db.Text
+  content     String    @db.Text
+  
+  blogPost    BlogPost  @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  
+  @@unique([blogPostId, locale])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
