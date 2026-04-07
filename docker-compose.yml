@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/china_travel
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - FACEBOOK_CLIENT_ID=${FACEBOOK_CLIENT_ID}
+      - FACEBOOK_CLIENT_SECRET=${FACEBOOK_CLIENT_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=china_travel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
