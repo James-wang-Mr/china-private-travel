@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 50% 97%;
+    --foreground: 25 30% 25%;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-cream text-bark font-sans antialiased;
+  }
+  
+  /* RTL Support for Arabic */
+  html[dir="rtl"] {
+    direction: rtl;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-forest text-white px-6 py-3 rounded-lg font-medium 
+           hover:bg-forest-600 transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-forest/50;
+  }
+  
+  .btn-secondary {
+    @apply bg-sunflower text-bark px-6 py-3 rounded-lg font-medium 
+           hover:bg-sunflower-dark transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-sunflower/50;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-forest text-forest px-6 py-3 rounded-lg font-medium 
+           hover:bg-forest hover:text-white transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-md overflow-hidden
+           hover:shadow-lg transition-shadow duration-300;
+  }
+  
+  .section-title {
+    @apply font-serif text-3xl md:text-4xl text-forest mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-moss text-lg max-w-2xl mx-auto;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+}
